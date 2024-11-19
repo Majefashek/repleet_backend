@@ -16,6 +16,7 @@ from .models import MySession
 from .serializers import MySessionSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from rest_framework import generics
 
 class UserPagination(PageNumberPagination):
     page_size = 10 
@@ -92,3 +93,48 @@ class TeacherListView(APIView):
             'data': serializer.data,
             'message': 'Teachers retrieved successfully.'
         })
+
+
+class MySessionPagination(PageNumberPagination):
+    page_size = 10  # Set the default page size
+    page_size_query_param = 'page_size'  # Allow clients to set page size
+    max_page_size = 100  # Set a maximum page size
+
+class MySessionByUserView(generics.ListAPIView):
+    serializer_class = MySessionSerializer
+    pagination_class = MySessionPagination
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return MySession.objects.filter(user_id=user_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return Response({'success': True, 'data': serializer.data})
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'success': True, 'data': serializer.data})
+
+class SessionPagination(PageNumberPagination):
+    page_size = 10  # Set the default page size
+    page_size_query_param = 'page_size'  # Allow clients to set page size
+    max_page_size = 100  # Set a maximum page size
+
+class SessionByTeacherView(generics.ListAPIView):
+    serializer_class = MySessionSerializer
+    pagination_class = SessionPagination
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        return MySession.objects.filter(teacher_id=teacher_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return Response({'success': True, 'data': serializer.data})
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'success': True, 'data': serializer.data})
