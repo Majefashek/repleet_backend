@@ -1,4 +1,37 @@
 
+
+def newest_prompt(ref_audio_features,query_audio_features):
+    return f"""
+    "Please act as a music teacher with over 20 years of experience. 
+    Given the following audio feature sets, assess how well the 'query' music performs in comparison to 
+    the 'reference' music. The features for each piece are provided below. Please analyze the similarities 
+    and differences in these features to determine a score that reflects the performance of the query music in terms of alignment, rhythm, melody, pitch, and timbre, 
+    among other relevant aspects. The score should range from 0 to 100, 
+    where 100 represents a perfect match with the reference music and 0 represents no alignment.
+
+    Reference Audio Features: {ref_audio_features}
+
+    Query Audio Features: {query_audio_features}
+    Provide constructive feedback:  
+    - Identify strengths and areas needing improvement.
+    - Offer actionable advice to enhance the user’s performance.
+    I would like the guidance to refleect deep expertise and practical knowledge in teaching music. 
+
+
+     Assign a final performance grade (Range: 0 to 100, where 100 is perfect). You should this critically evaluating the users performance in all the features above 
+    and holistically provide an accurate assessment of the user's performance.
+    ### Output Format:
+    Return the analysis in JSON format:
+    {{
+        "score": <LLM_Generated_Score>,
+        "recommendation": "<LLM_Recommendation>"
+    }}
+    ### Recommendation Requirements:
+    - Should be limited to 50 words and presented in a single paragraph.
+    """
+
+
+
 def new_prompt(ref_audio_features,query_audio_features):
     return f"""
     "Given the following audio feature sets, assess how well the 'query' music performs in comparison to 

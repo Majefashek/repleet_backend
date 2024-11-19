@@ -47,7 +47,7 @@ class CompareTwoAudiosEndpoint(APIView):
             # Use ThreadPoolExecutor to run feature extraction concurrently
 
             # Generate a prompt for the AI model
-            prompt2 = new_prompt(ref_audio_features, query_audio_features)
+            prompt2 = newest_prompt(ref_audio_features, query_audio_features)
             response = get_chat_gpt_response(prompt2)
             response_dict = {item[0]: item[1] for item in response}
 
@@ -68,7 +68,7 @@ class CompareTwoAudiosEndpoint(APIView):
 
     def trimaudio(self, audio):
         audio_untrimmed = AudioSegment.from_file(audio)
-        time = 90 * 1000
+        time = 30 * 1000
         trimmed_audio = audio_untrimmed[:time]
         output = BytesIO()
         trimmed_audio.export(output, format="mp3")
