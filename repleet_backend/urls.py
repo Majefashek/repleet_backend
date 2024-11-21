@@ -30,6 +30,8 @@ urlpatterns = [
     path('api/v1/',include('competition.urls')),
     path('api/v1/',include('challenge.urls')),
     path('api/v1/',include('call_response.urls')),
+    path('api/v1/',include('audio_management.urls')),
+
 ]
 
 if settings.DEBUG:

@@ -1,5 +1,6 @@
 from django.db import models
-from django.db import models
+from authentication.models import CustomUser
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 class AudioTrack(models.Model):
@@ -42,8 +43,8 @@ class AudioTrack(models.Model):
         ('Full Music', 'Full Music'),
     ]
     
-    audio_file = models.FileField(upload_to='reference_tracks/', unique=True)
-    name=models.CharField(max_length=100,null=True,blank=True)
+    audio_file = models.FileField(upload_to='reference_tracks/', unique=True,blank=True,null=True)
+    name=models.CharField(max_length=200,null=True,blank=True)
     artist=models.CharField(max_length=200,blank=True,null=True)
     description=models.CharField(max_length=200,blank=True,null=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES,blank=True,null=True)
@@ -56,3 +57,14 @@ class AudioTrack(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.difficulty_level} - {self.genre} - {self.musical_element} - {self.music_length}"
+    
+
+class MyReferenceTracks(models.Model):
+    audio = models.ForeignKey(AudioTrack, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        # Check if the uploaded_by user has the role of 'Admin'
+        if self.uploaded_by.role != 'Admin':
+            raise ValidationError('Only users with the role of Admin can upload reference tracks.')
+        super().save(*args, **kwargs)

@@ -174,7 +174,7 @@ class TopParticipantsListView(generics.ListAPIView):
 class UploadCompetitionTracks(APIView):
     parser_classes = [MultiPartParser]
     @swagger_auto_schema(
-        operation_description="Uploads an audio file as a reference track and saves it with specified category and difficulty.",
+        operation_description="Uploads an audio file as a competition track and saves it with specified category and difficulty.",
         manual_parameters=audio_upload_parameters,
     )
     def post(self, request):
