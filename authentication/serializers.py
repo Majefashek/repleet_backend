@@ -67,6 +67,7 @@ class SignUpSerializer(serializers.ModelSerializer):
                   'first_name', 
                   'last_name',
                   'username',
+                  'interest', 
                   'email', 
                   'password',
                   'skill_level',

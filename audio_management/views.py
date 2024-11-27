@@ -78,31 +78,40 @@ class UploadReferenceTrackView(APIView):
         
 
 
-class ReferenceTracksByDifficultyView(APIView): 
+class ReferenceTracksByDifficultyView(APIView):
     serializer_class = ReferenceTracksSerializer
-
     @swagger_auto_schema(
         operation_description="Get reference tracks filtered by difficulty level",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
                 'difficulty': openapi.Schema(type=openapi.TYPE_STRING, description="Difficulty level to filter by"),
+                'interest': openapi.Schema(type=openapi.TYPE_STRING, description="Interest category to filter by"),
             },
         ),
         responses={200: openapi.Response('Success', ReferenceTracksSerializer(many=True))},
     )
-    def post(self, request, *args, **kwargs):  
-        difficulty = request.data.get('difficulty', None)  
-        queryset = self.get_queryset(difficulty)
+    def post(self, request, *args, **kwargs):
+        difficulty = request.data.get('difficulty', None)
+        interest = request.data.get('interest', None)
+        queryset = self.get_queryset(difficulty, interest)
 
-        serializer = self.serializer_class(queryset, many=True) 
+        serializer = self.serializer_class(queryset, many=True)
         return Response({'success': True, 'data': serializer.data})
 
-    def get_queryset(self, difficulty): 
-        if difficulty:
+    def get_queryset(self, difficulty, interest):
+        if difficulty and interest:
+            return MyReferenceTracks.objects.filter(audio__difficulty_level=difficulty, audio__category=interest)
+        elif interest and not difficulty:
+            return MyReferenceTracks.objects.filter(audio__category=interest)
+        elif difficulty and not interest:
             return MyReferenceTracks.objects.filter(audio__difficulty_level=difficulty)
-        return MyReferenceTracks.objects.all()
-    
+        else:
+             return MyReferenceTracks.objects.all()
+             
+
+
+
 
 
 class DeleteReferenceTrackView(APIView):

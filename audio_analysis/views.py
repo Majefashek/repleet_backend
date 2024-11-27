@@ -27,8 +27,6 @@ class CompareTwoAudiosEndpoint(APIView):
     )
     def post(self, request):
         ref_audio_path = query_audio_path = None
-        if "query_file" not in request.FILES or "reference_file" not in request.FILES:
-            return Response({"success": False, "error": "Missing audio files."}, status=status.HTTP_400_BAD_REQUEST)
         try:
             # Extract audio files from request
             ref_audio_file = self.trimaudio(request.FILES["reference_file"])
@@ -46,30 +44,14 @@ class CompareTwoAudiosEndpoint(APIView):
             # Get full paths to the audio files
             ref_audio_full_path = default_storage.path(ref_audio_path)
             query_audio_full_path = default_storage.path(query_audio_path)
-            audio = MonoLoader(filename=query_audio_full_path, sampleRate=16000, resampleQuality=4)()
-            
-            graph_file_path = os.path.abspath("discogs-effnet-bs64-1.pb")
-            return Response(graph_file_path)
-            embedding_model = TensorflowPredictEffnetDiscogs(graphFilename='discogs-effnet-bs64-1.pb', output="PartitionedCall:1")
-            embeddings = embedding_model(audio)
-            model = TensorflowPredict2D(graphFilename="mtg_jamendo_instrument-discogs-effnet-1.pb")
-            predictions = model(embeddings) 
-            return Response(predictions) 
 
-            #ref_audio_features = extract_essentia_features(ref_audio_full_path)
-            start_time=time.time()
-            file1="discogs-effnet-bs64-1.pb"
-            return Response({'data':self.predict_instrument(query_audio_full_path)}) 
-            query_audio_features = extract_music_extractor_features(query_audio_full_path)
-            distance = compare_audio_files(request.FILES["query_file"],request.FILES["reference_file"])
+            ref_audio_features = extract_essentia_features(ref_audio_full_path)
+            query_audio_features = extract_essentia_features(query_audio_full_path)
 
-            end_time=time.time() 
-            return Response({'distance':distance,'time':end_time-start_time})
             # Use ThreadPoolExecutor to run feature extraction concurrently
 
             # Generate a prompt for the AI model
-            return Response({'response':query_audio_features,'time_spent':end_time-start_time})
-            prompt2 = analyse_sound(query_audio_features) 
+            prompt2 = newest_prompt(ref_audio_features, query_audio_features)
             response = get_chat_gpt_response(prompt2)
             response_dict = {item[0]: item[1] for item in response}
 
@@ -96,81 +78,3 @@ class CompareTwoAudiosEndpoint(APIView):
         trimmed_audio.export(output, format="mp3")
         output.seek(0)
         return output
-    
-    def analyze_audio(self,audio_path):
-        """
-        Analyzes an audio file using Essentia's TensorFlow-based models to detect
-        musical instruments and classify music vs non-music.
-        
-        Parameters:
-            audio_path (str): Path to the audio file
-            
-        Returns:
-            dict: Analysis results containing instrument predictions and music/noise classification
-        """
-        # Load audio file
-        loader = es.MonoLoader(filename=str(audio_path))
-        audio = loader()
-        
-        # Initialize TensorFlow-based models
-        instrument_classifier = es.TensorflowPredict(
-            graphFilename='musicnn-mtt-musicnn-1.pb',
-            input='model/Placeholder',
-            output='model/Sigmoid'
-        )
-        
-        # Initialize feature extractors needed by the model
-        patch_size = 187
-        patch_hop_size = 128
-        frame_size = 512
-        hop_size = 256
-        
-        # Extract features using VGGish model requirements
-        features = []
-        for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size):
-            features.append(frame)
-        
-        # Get predictions
-        predictions = instrument_classifier(features)
-        
-        # Get top predicted instruments (threshold > 0.5)
-        instrument_labels = [
-            'guitar', 'piano', 'drums', 'violin', 'cello', 'flute', 
-            'saxophone', 'trumpet', 'voice', 'synthesizer'
-        ]
-        
-        detected_instruments = []
-        confidence_scores = {}
-        
-        for i, score in enumerate(predictions[0]):
-            confidence_scores[instrument_labels[i]] = float(score)
-            if score > 0.5:
-                detected_instruments.append(instrument_labels[i])
-        
-        # Use music/non-music classifier
-        music_classifier = es.MusicExtractor()
-        music_features, _ = music_classifier(str(audio_path))
-        
-        # Determine if it's music based on several musical features
-        is_music = music_features['is_music']
-        
-        return {
-            'is_music': bool(is_music),
-            'detected_instruments': detected_instruments,
-            'confidence_scores': confidence_scores
-        }
-    
-    def extract_pitch(self, audio_path): 
-        sample_rate = 44100
-        audio = es.MonoLoader(filename=audio_path, sampleRate=sample_rate)()
-        pExt = es.PredominantPitchMelodia(frameSize=2048, hopSize=128)
-        pitch, pitchConf = pExt(audio)
-        return len(pitch), len(pitchConf) 
-    
-    def predict_instrument(self,audio_path,file1,file2):
-        audio = MonoLoader(filename=audio_path, sampleRate=16000, resampleQuality=4)()
-        embedding_model = TensorflowPredictEffnetDiscogs(graphFilename="discogs-effnet-bs64-1.pb", output="PartitionedCall:1")
-        embeddings = embedding_model(audio)
-        model = TensorflowPredict2D(graphFilename="mtg_jamendo_instrument-discogs-effnet-1.pb")
-        predictions = model(embeddings)
-        return predictions 

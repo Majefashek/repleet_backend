@@ -25,6 +25,12 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
+    INTEREST_CHOICES = [
+        ('Piano', 'Piano'),
+        ('Guitar', 'Guitar'),
+        ('Drum', 'Drum'),
+        ('Vocals', 'Vocals'),
+    ]
     SKILL_LEVEL = [
         ('Beginner', 'Beginner'),
         ('Intermediate', 'Intermediate'),
@@ -39,6 +45,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, blank=True, null=True)
     profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+    interest=models.CharField(max_length=20,choices=INTEREST_CHOICES,default='Piano')
     phonenumber = models.CharField(max_length=20, blank=True, null=True)
     fullName=models.CharField(max_length=50,null=True, blank=True)
     bio=models.CharField(max_length=1000,null=True,blank=True)
