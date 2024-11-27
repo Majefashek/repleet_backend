@@ -1,8 +1,6 @@
 # Start from the official Essentia image
 FROM ubuntu:22.04
 
-FROM mtgupf/essentia
-
 # Install system dependencies (if any)
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -11,13 +9,17 @@ RUN apt-get update && apt-get install -y \
     libsndfile1 \
     ffmpeg
 
-#RUN pip install --no-cache-dir essentia-tensorflow
+# Install essentia-tensorflow
+RUN pip install --no-cache-dir essentia-tensorflow
 
 # Set environment variables for Django
 ENV PYTHONUNBUFFERED=1
 
 # Copy your Django project to the container
 COPY . /app
+
+# Copy TensorFlow graph files into the container
+#COPY app/discogs-effnet-bs64-1.pb /app/models/discogs-effnet-bs64-1.pb
 
 # Set the working directory
 WORKDIR /app

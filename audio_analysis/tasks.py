@@ -298,6 +298,22 @@ def extract_music_extractor_features(audio_path):
             return obj
 
         features_dict = {
+            "loudness_ebu128": {
+                "integrated": convert_to_serializable(features['lowlevel.loudness_ebu128.integrated']),
+                "loudness_range": convert_to_serializable(features['lowlevel.loudness_ebu128.loudness_range'])
+            },
+            "mfcc_mean": convert_to_serializable(features['lowlevel.mfcc.mean']),
+            "tempo": convert_to_serializable(features['rhythm.bpm']),
+            "beat_positions": convert_to_serializable(features['rhythm.beats_position']),
+            "key_scale": {
+                "key": convert_to_serializable(features['tonal.key_edma.key']),
+                "scale": convert_to_serializable(features['tonal.key_edma.scale'])
+            },
+            "spectral_complexity": {
+                "mean": convert_to_serializable(features['lowlevel.spectral_complexity.mean']),
+                "stdev": convert_to_serializable(features['lowlevel.spectral_complexity.stdev'])
+            },
+            "dynamic_complexity": convert_to_serializable(features['lowlevel.dynamic_complexity']),
             "spectral_contrast": {
                 "spectral_contrast_mean": convert_to_serializable(features['lowlevel.spectral_contrast_coeffs.mean']),
                 "spectral_contrast_std": convert_to_serializable(features['lowlevel.spectral_contrast_coeffs.stdev'])
@@ -306,7 +322,13 @@ def extract_music_extractor_features(audio_path):
                 'zero_crossing_rate_mean': convert_to_serializable(features['lowlevel.zerocrossingrate.mean']),
                 'zero_crossing_rate_std': convert_to_serializable(features['lowlevel.zerocrossingrate.stdev']),
             },
+            'key_detection': {
+                'key_edma': convert_to_serializable(features['tonal.key_edma.key']),
+                'key_krumhansl': convert_to_serializable(features['tonal.key_krumhansl.key']),
+                'key_temperley': convert_to_serializable(features['tonal.key_temperley.key']),
+            }
         }
+
 
         return features_dict
 

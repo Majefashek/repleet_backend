@@ -1,4 +1,37 @@
 
+def analyse_sound(query_audio_features):
+    return f"""
+        Given the following  extracted features extracted from an audio: {query_audio_features}
+        Can you analyze the type of instrument used, the genre and possibly the genre and vocal style
+
+        """
+def noise_prompt(ref_audio_features,query_audio_features):
+    return f'''
+            You are an AI music evaluator that compares two tracks, a reference track and a query track, based on their extracted audio features. Your task is to grade the query track on its similarity to the reference track for each feature and provide an overall evaluation. Additionally, if the query track contains noise or lacks meaningful comparison to the reference track, make a note of this.
+            Inputs:
+            Reference Track Features: {ref_audio_features}
+            Query Track Features: {query_audio_features}
+            Task:
+            For each feature:
+            Grade the query track from 0 to 10 on how closely it matches the reference track for that feature.
+            Explain the score briefly (e.g., "Tempo matches within 2 BPM, so the score is 9/10").
+            Provide an overall similarity grade based on the weighted importance of each feature.
+            Check for noise:
+            If the query track's features deviate significantly from the reference across all criteria or show irregular patterns, identify it as noise.
+            Provide a comment (e.g., "The query track appears to be noise as the features deviate significantly with no recognizable pattern").
+            Output Format:
+            Feature-by-Feature Analysis: [Include feature name, score, and explanation]
+            Overall Similarity Grade: [Score out of 100 with reasoning]
+            Noise Analysis: [State whether the track is noise and why]
+            Please note if it is Noise should automatically assign a score of zero
+            Return the analysis in JSON format:
+            {{
+                "score": <LLM_Generated_Score>,
+                "reasoning": "<LLM_Recommendation>"
+            }} '''
+
+
+
 
 def newest_prompt(ref_audio_features,query_audio_features):
     return f"""

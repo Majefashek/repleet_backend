@@ -21,12 +21,127 @@ from decouple import config
 # Define your API key securely
 API_KEY = config("API_KEY")
 
+import essentia.standard as estd
 
-# Define the response model using Pydantic
+def compare_audio_files(query_audio_path, reference_audio_path, alignment_type='serra09', distance_type='asymmetric'):
+    """
+    Compare two audio files (query and reference) and compute a cover song similarity score.
+    
+    Parameters:
+    query_audio_path (str): Path to the query audio file (cover song).
+    reference_audio_path (str): Path to the reference audio file (true or false cover).
+    alignment_type (str): Sequence alignment type ('serra09', 'chen17', etc.).
+    distance_type (str): Distance type for the similarity measure ('asymmetric', 'symmetric').
+    
+    Returns:
+    float: Cover song similarity distance.
+    """
+    # Load audio files and convert to mono
+    query_audio = estd.MonoLoader(filename=query_audio_path, sampleRate=32000)()
+    reference_audio = estd.MonoLoader(filename=reference_audio_path, sampleRate=32000)()
+
+    # Compute Harmonic Pitch Class Profile (HPCP)
+    query_hpcp = estd.hpcpgram(query_audio, sampleRate=32000)
+    reference_hpcp = estd.hpcpgram(reference_audio, sampleRate=32000)
+    
+    # Compute Chroma Cross Similarity
+    crp = estd.ChromaCrossSimilarity(frameStackSize=9,
+                                     frameStackStride=1,
+                                     binarizePercentile=0.095,
+                                     oti=True)
+    
+    # Compute cross recurrent plot for the query and reference pair
+    crp_result = crp(query_hpcp, reference_hpcp)
+    
+    # Plot the cross recurrent plot
+
+    # Compute the Cover Song Similarity distance using the precomputed cross similarity
+    score_matrix, distance = estd.CoverSongSimilarity(disOnset=0.5,
+                                                      disExtension=0.5,
+                                                      alignmentType=alignment_type,
+                                                      distanceType=distance_type)(crp_result)
+    
+    return distance
+
+def extract_music_extractor_features(audio_path):
+    """
+    Extracts audio features using Essentia's MusicExtractor for more advanced feature extraction.
+
+    Parameters:
+    - audio_path (str): Path to the audio file.
+
+    Returns:
+    - dict: A dictionary containing the parsed audio features in a JSON-serializable format.
+    """
+    def _extract_music_features():
+        """
+        Synchronously extracts music features using MusicExtractor.
+        """
+        features, _ = MusicExtractor(
+            lowlevelStats=['mean', 'stdev'],
+            rhythmStats=['mean', 'stdev'],
+            tonalStats=['mean', 'stdev']
+        )(audio_path)
+        return features
+
+    def _parse_music_extractor_features(features):
+        """
+        Helper function to parse and convert the MusicExtractor features into a JSON-serializable format.
+        """
+        def convert_to_serializable(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return obj
+
+        features_dict = {
+            "loudness_ebu128": {
+                "integrated": convert_to_serializable(features['lowlevel.loudness_ebu128.integrated']),
+                "loudness_range": convert_to_serializable(features['lowlevel.loudness_ebu128.loudness_range'])
+            },
+            "mfcc_mean": convert_to_serializable(features['lowlevel.mfcc.mean']),
+            "tempo": convert_to_serializable(features['rhythm.bpm']),
+            "beat_positions": convert_to_serializable(features['rhythm.beats_position']),
+            "key_scale": {
+                "key": convert_to_serializable(features['tonal.key_edma.key']),
+                "scale": convert_to_serializable(features['tonal.key_edma.scale'])
+            },
+            "spectral_complexity": {
+                "mean": convert_to_serializable(features['lowlevel.spectral_complexity.mean']),
+                "stdev": convert_to_serializable(features['lowlevel.spectral_complexity.stdev'])
+            },
+            "dynamic_complexity": convert_to_serializable(features['lowlevel.dynamic_complexity']),
+            "spectral_contrast": {
+                "spectral_contrast_mean": convert_to_serializable(features['lowlevel.spectral_contrast_coeffs.mean']),
+                "spectral_contrast_std": convert_to_serializable(features['lowlevel.spectral_contrast_coeffs.stdev'])
+            },
+            'zero_crossing_rate': {
+                'zero_crossing_rate_mean': convert_to_serializable(features['lowlevel.zerocrossingrate.mean']),
+                'zero_crossing_rate_std': convert_to_serializable(features['lowlevel.zerocrossingrate.stdev']),
+            },
+            'key_detection': {
+                'key_edma': convert_to_serializable(features['tonal.key_edma.key']),
+                'key_krumhansl': convert_to_serializable(features['tonal.key_krumhansl.key']),
+                'key_temperley': convert_to_serializable(features['tonal.key_temperley.key']),
+            }
+        }
+
+        return features_dict
+
+    # Extract features and parse them
+    features = _extract_music_features()
+    return _parse_music_extractor_features(features)
+# '''Define the response model using Pydantic
+
+'''
+
 class AudioAnalysis(BaseModel):
     score: int
-    recommendation: str
+    reasoning: str'''
 
+class AudioAnalysis(BaseModel):
+    genre: str
+    instrument:str
+    vocal_style:str
 
 def get_chat_gpt_response(prompt: str) -> AudioAnalysis:
     """Get a structured response from the GPT-4 API."""
