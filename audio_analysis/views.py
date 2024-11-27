@@ -13,9 +13,6 @@ from .utils import *
 import uuid  # Import uuid to generate unique filenames
 from concurrent.futures import ProcessPoolExecutor
 import time
-from essentia.standard import MonoLoader, PitchCREPE
-from essentia.standard import MonoLoader, TensorflowPredictEffnetDiscogs, TensorflowPredict2D
-from essentia.standard import MonoLoader, TensorflowPredictMusiCNN, TensorflowPredictVGGish
 import os
 
 class CompareTwoAudiosEndpoint(APIView):
