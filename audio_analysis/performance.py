@@ -12,10 +12,10 @@ class EvaluatePerformanceClass:
 
         # Calculate similarity for each feature type.
         scores = {}
-        scores['pitch_yin_fft'] = self.compare_features(
+        scores['pitch_yin_fft'] = self.r2_similarity(
             ref_extracted_data['pitch_yin_fft'], uploaded_extracted_data['pitch_yin_fft']
         )
-        scores['pitch_confidence'] = self.compare_features(
+        scores['pitch_confidence'] = self.r2_similarity(
             ref_extracted_data['pitch_confidence'], uploaded_extracted_data['pitch_confidence']
         )
         scores['chroma'] = self.compare_arrays(

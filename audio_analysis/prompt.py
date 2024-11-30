@@ -54,7 +54,7 @@ def newest_prompt(ref_audio_features,query_audio_features):
      Assign a final performance grade (Range: 0 to 100, where 100 is perfect). You should this critically evaluating the users performance in all the features above 
     and holistically provide an accurate assessment of the user's performance.
     ### Output Format:
-    Return the analysis in JSON format:
+    Return the analysis in JSON format: 
     {{
         "score": <LLM_Generated_Score>,
         "recommendation": "<LLM_Recommendation>"
@@ -106,7 +106,6 @@ def initial_prompt(scores,keys,scales):
         Score: {scores['pitch_yin_fft']}
     - *Pitch Confidence*: Scalar comparison (Range: 0 to 1; higher is better).
         Score: {scores['pitch_confidence']}
-
     - *Rhythm (Timing and Consistency):*
     - *Tempo Accuracy*: Scalar comparison (Range: 0 to 1; 1 is a perfect tempo match).  
         *Lower weight:* Minor discrepancies should not heavily impact the score.  
@@ -155,7 +154,8 @@ def initial_prompt(scores,keys,scales):
 
 
     3. *Assign a final performance grade* (Range: 0 to 100, where 100 is perfect). You should this critically evaluating the users performance in all the features above 
-    and holistically provide an accurate assessment of the user's performance.
+    and holistically provide an accurate assessment of the user's performance. You should also indicate if you assess that the music are different. In that
+    case give a  score of zero and point out they are different
     ### Output Format:
     Return the analysis in *JSON* format:
     {{
@@ -172,9 +172,9 @@ def generate_prompt(scores, keys, scales):
     """Creates a prompt for the LLM to analyze the user's performance based on rhythm, pitch, dynamics, and expression."""
     return f"""
                 Analyze the user’s performance based on the scores extracted from a comparison between a reference audio and the user’s audio. 
-                Focus on three main criteria: Pitch, Rhythm, and Expression. Each feature’s contribution should reflect its importance to the overall musical quality, with pitch weighted highest, followed by rhythm, and then expression. The features are compared using mainly Dynamic Time Warping and Scalar Comparison.
+                Focus on three main criteria: Pitch, Rhythm, and Expression. Each feature’s contribution should reflect its importance to the overall musical quality, with pitch weighted highest, followed by rhythm, and then expression. The features are compared using mainly r^2 similarity score and Scalar Comparison.
 
-                For Dynamic Time Warping, the range of values is from negative infinity to 1, with 1 indicating a perfect match. Higher values indicate better performance, while lower values suggest greater divergence from the reference song.
+                For r2 similarity score, the range of values is from negative 0 to 1, with 1 indicating a perfect match. Higher values indicate better performance, while lower values suggest greater divergence from the reference song.
 
                 For scalar comparison, the values range from 0 to 1, with 1 indicating a perfect match and lower values indicating poorer alignment.
 
@@ -183,9 +183,9 @@ def generate_prompt(scores, keys, scales):
                 Weighted Scoring Metrics and Ranges:
                 Pitch (Accuracy and Stability):
 
-                Primary Factor (25% of Total Score) – Pitch accuracy and stability should make up half of the total score. Any misalignment here should heavily impact the final score.
+                Primary Factor (25% of Total Score) – Pitch accuracy and  should make up 25% of the total score. Any misalignment here should heavily impact the final score.
 
-                Pitch Accuracy (Yin FFT): Scalar comparison (Range: 0 to 1; 1 is a perfect match). Contributes 25% of the total score.
+                Pitch Accuracy (Yin FFT): r2 similarity (Range: 0 to 1; 1 is a perfect match). Contributes 25% of the total score.
                 Score: {scores.get('pitch_yin_fft', 'N/A')}
                 Rhythm (Timing and Consistency):
 
@@ -193,7 +193,7 @@ def generate_prompt(scores, keys, scales):
 
                 Tempo Accuracy: Scalar comparison (Range: 0 to infinity; 1 is a perfect tempo match). Contributes 10% of the total score.
                 Score: {scores.get('tempo', 'N/A')}
-                Beat Position Matching: DTW distance complement (Range: negative infinity to 1; higher indicates better alignment). Contributes 25% of the total score.
+                Beat Position Matching: r2 similarity score (Range: 0 to 1; higher indicates better alignment). Contributes 25% of the total score.
                 Score: {scores.get('beat_positions', 'N/A')}
                 Expression (Harmonic and Timbre Control):
 
@@ -201,9 +201,9 @@ def generate_prompt(scores, keys, scales):
 
                 Harmonic Ratio: Scalar comparison (Range: 0 to 1; higher indicates better harmonic alignment). Contributes 8% of the total score.
                 Score: {scores.get('avg_harmonic_ratio', 'N/A')}
-                Chroma Similarity: DTW distance complement (Range: negative infinity to 1; higher indicates better chromatic match). Contributes 12% of the total score.
+                Chroma Similarity: r2 similarity score (Range: 0 to 1; higher indicates better chromatic match). Contributes 12% of the total score.
                 Score: {scores.get('chroma', 'N/A')}
-                MFCC Mean Comparison: DTW distance complement (Range: negative infinity to 1; higher is better). Contributes 10% of the total score.
+                MFCC Mean Comparison: r2 similarity score (Range: 0 to 1; higher is better). Contributes 10% of the total score.
                 Score: {scores.get('mfcc_mean', 'N/A')}
                 Additional Metrics (Minimal Weight): 
                 These features should minimally impact the final score unless there is a severe discrepancy. So the total score
@@ -213,7 +213,7 @@ def generate_prompt(scores, keys, scales):
                 Score: {scores.get('dynamic_range', 'N/A')}(1% of total score)
                 Zero Crossing Rate Mean and Std: Scalar comparison (Range: 0 to 1; higher is better).
                 Scores: {scores.get('zcr_mean', 'N/A')}, {scores.get('zcr_std', 'N/A')} (1% of total score)
-                Spectral Contrast Mean and Std: DTW distance complement (Range: negative infinity to 1; higher is better).
+                Spectral Contrast Mean and Std: r2 similarity score (Range: 0 to 1; higher is better).
                 Scores: {scores.get('spectral_contrast_mean', 'N/A')}, {scores.get('spectral_contrast_std', 'N/A')}
                 Key and Scale: (3% of total score)
                 These contribute to harmonic compatibility but do not require a direct numerical comparison. A mismatch in key or scale should reduce the final score by a significant margin, impacting the expression category.

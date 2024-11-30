@@ -18,6 +18,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
                    'username', 
                    'phonenumber',
                    'bio',
+                   'interest',
                    'skill_level',
                    'genre_of_interest',
                    'is_verified',
