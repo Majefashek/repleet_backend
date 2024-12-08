@@ -10,3 +10,8 @@ steps:
       '--project', '$repeetbackendproject', '--zone', 'your-zone',
       '--command', '/home/abdullahishuaibumaje/repleet_backend && git pull && docker-compose down && docker-compose up -d'
     ]
+
+# Adding the solution for logging (Option 1, 2, or 3 as discussed above)
+options:
+  logging: CLOUD_LOGGING_ONLY  # You can change this if you want a storage bucket
+  # logsBucket: gs://your-logs-bucket  # Uncomment and set your bucket if you want a logs bucket
