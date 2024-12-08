@@ -17,7 +17,7 @@ from .models import Challenge, ChallengeParticipant, ChallengeAudio
 from .serializers import ChallengeSerializer, ChallengeParticipantSerializer
 from audio_management.serializers import AudioTrackSerializer
 
-
+ 
 
 class ChallengeAudioListView(generics.ListAPIView):
     serializer_class = AudioTrackSerializer
