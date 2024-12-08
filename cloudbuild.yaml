@@ -1,0 +1,12 @@
+steps:
+  # Step 1: Clone the repository
+  - name: 'gcr.io/cloud-builders/git'
+    args: ['clone', 'https://github.com/Majefashek/repleet_backend.git']
+
+  # Step 2: SSH into your VM and pull latest changes
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'compute', 'ssh', 'abdullahishuaibumaje@fixedreepeet@104.197.17.121',
+      '--project', '$repeetbackendproject', '--zone', 'your-zone',
+      '--command', '/home/abdullahishuaibumaje/repleet_backend && git pull && docker-compose down && docker-compose up -d'
+    ]
